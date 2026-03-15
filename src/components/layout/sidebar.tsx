@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Home, Inbox, FolderKanban, Columns2, Menu, X } from 'lucide-react';
+import { Home, Inbox, FolderKanban, Columns2, Menu, X, CheckSquare } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
@@ -9,6 +9,7 @@ const items = [
   { href: '/app/home', label: 'Home', icon: Home },
   { href: '/app/queue', label: 'Queue', icon: Inbox },
   { href: '/app/projects', label: 'Projects', icon: FolderKanban },
+  { href: '/app/tasks', label: 'Tasks', icon: CheckSquare },
   { href: '/app/kanban', label: 'Kanban', icon: Columns2 },
 ];
 
