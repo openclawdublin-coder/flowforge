@@ -170,31 +170,31 @@ export function TaskList({ tasks, projects, users }: Props) {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Tasks</h1>
-        <Button onClick={() => setShowCreate(!showCreate)}>
-          {showCreate ? 'Cancel' : 'New task'}
-        </Button>
+        <Button onClick={() => setShowCreate(true)}>New task</Button>
       </div>
 
       {showCreate && (
-        <Card className="mb-4 p-4">
-          <h2 className="mb-3 font-medium">Create task</h2>
-          <TaskForm
-            defaultValues={{
-              title: '',
-              description: '',
-              priority: Priority.MEDIUM,
-              status: TaskStatus.TODO,
-              projectId: null,
-              assigneeId: null,
-            }}
-            projects={projects}
-            users={users}
-            onSubmit={handleCreate}
-            isPending={isPending}
-            submitLabel="Create task"
-            onCancel={() => setShowCreate(false)}
-          />
-        </Card>
+        <Dialog open onOpenChange={(open) => { if (!open) setShowCreate(false); }}>
+          <DialogContent>
+            <DialogTitle>Create task</DialogTitle>
+            <TaskForm
+              defaultValues={{
+                title: '',
+                description: '',
+                priority: Priority.MEDIUM,
+                status: TaskStatus.TODO,
+                projectId: null,
+                assigneeId: null,
+              }}
+              projects={projects}
+              users={users}
+              onSubmit={handleCreate}
+              isPending={isPending}
+              submitLabel="Create task"
+              onCancel={() => setShowCreate(false)}
+            />
+          </DialogContent>
+        </Dialog>
       )}
 
       {tasks.length === 0 && !showCreate && (
