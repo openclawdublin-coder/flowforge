@@ -10,6 +10,7 @@ import { createTask, updateTask, deleteTask } from '@/actions/tasks';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { taskSchema } from '@/lib/validations/task';
 import { cn } from '@/lib/utils';
@@ -90,10 +91,10 @@ function TaskForm({
   });
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       <Input {...form.register('title')} placeholder="Task title" />
       <Input {...form.register('description')} placeholder="Description (optional)" />
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         <select {...form.register('status')} className={selectClass}>
           {Object.values(TaskStatus).map((s) => (
             <option key={s} value={s}>{statusLabel[s] ?? s}</option>
@@ -118,7 +119,7 @@ function TaskForm({
         </select>
       </div>
       <div className="flex gap-2">
-        <Button disabled={isPending} className="flex-1">{submitLabel}</Button>
+        <Button disabled={isPending}>{submitLabel}</Button>
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
         )}
@@ -130,6 +131,7 @@ function TaskForm({
 export function TaskList({ tasks, projects, users }: Props) {
   const [isPending, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<string | null>(null);
+  const editingTask = tasks.find((t) => t.id === editingId) ?? null;
   const [showCreate, setShowCreate] = useState(false);
 
   const handleCreate = (values: FormValues) => {
@@ -168,31 +170,31 @@ export function TaskList({ tasks, projects, users }: Props) {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Tasks</h1>
-        <Button onClick={() => setShowCreate(!showCreate)}>
-          {showCreate ? 'Cancel' : 'New task'}
-        </Button>
+        <Button onClick={() => setShowCreate(true)}>New task</Button>
       </div>
 
       {showCreate && (
-        <Card className="mb-4 p-4">
-          <h2 className="mb-3 font-medium">Create task</h2>
-          <TaskForm
-            defaultValues={{
-              title: '',
-              description: '',
-              priority: Priority.MEDIUM,
-              status: TaskStatus.TODO,
-              projectId: null,
-              assigneeId: null,
-            }}
-            projects={projects}
-            users={users}
-            onSubmit={handleCreate}
-            isPending={isPending}
-            submitLabel="Create task"
-            onCancel={() => setShowCreate(false)}
-          />
-        </Card>
+        <Dialog open onOpenChange={(open) => { if (!open) setShowCreate(false); }}>
+          <DialogContent>
+            <DialogTitle>Create task</DialogTitle>
+            <TaskForm
+              defaultValues={{
+                title: '',
+                description: '',
+                priority: Priority.MEDIUM,
+                status: TaskStatus.TODO,
+                projectId: null,
+                assigneeId: null,
+              }}
+              projects={projects}
+              users={users}
+              onSubmit={handleCreate}
+              isPending={isPending}
+              submitLabel="Create task"
+              onCancel={() => setShowCreate(false)}
+            />
+          </DialogContent>
+        </Dialog>
       )}
 
       {tasks.length === 0 && !showCreate && (
@@ -205,31 +207,6 @@ export function TaskList({ tasks, projects, users }: Props) {
       <div className="grid gap-3">
         {tasks.map((task) => {
           const due = formatDate(task.dueAt);
-          const isEditing = editingId === task.id;
-
-          if (isEditing) {
-            return (
-              <Card key={task.id} className="p-4">
-                <h3 className="mb-3 font-medium">Edit task</h3>
-                <TaskForm
-                  defaultValues={{
-                    title: task.title,
-                    description: task.description ?? '',
-                    priority: task.priority as Priority,
-                    status: task.status as TaskStatus,
-                    projectId: task.project?.id ?? null,
-                    assigneeId: task.assignee?.id ?? null,
-                  }}
-                  projects={projects}
-                  users={users}
-                  onSubmit={handleUpdate(task.id)}
-                  isPending={isPending}
-                  submitLabel="Save"
-                  onCancel={() => setEditingId(null)}
-                />
-              </Card>
-            );
-          }
 
           return (
             <Card key={task.id} className="flex items-center gap-4 p-4">
@@ -266,6 +243,30 @@ export function TaskList({ tasks, projects, users }: Props) {
           );
         })}
       </div>
+
+      {editingTask && (
+        <Dialog open onOpenChange={(open) => { if (!open) setEditingId(null); }}>
+          <DialogContent>
+            <DialogTitle>Edit task</DialogTitle>
+            <TaskForm
+              defaultValues={{
+                title: editingTask.title,
+                description: editingTask.description ?? '',
+                priority: editingTask.priority as Priority,
+                status: editingTask.status as TaskStatus,
+                projectId: editingTask.project?.id ?? null,
+                assigneeId: editingTask.assignee?.id ?? null,
+              }}
+              projects={projects}
+              users={users}
+              onSubmit={handleUpdate(editingTask.id)}
+              isPending={isPending}
+              submitLabel="Save"
+              onCancel={() => setEditingId(null)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
