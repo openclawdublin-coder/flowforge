@@ -112,6 +112,7 @@ export async function updateTask(taskId: string, input: Omit<Parameters<typeof c
 
   revalidatePath('/app/queue');
   revalidatePath('/app/kanban');
+  revalidatePath('/app/tasks');
   if (prev.projectId) revalidatePath(`/app/projects/${prev.projectId}`);
   if (parsed.projectId) revalidatePath(`/app/projects/${parsed.projectId}`);
 }
