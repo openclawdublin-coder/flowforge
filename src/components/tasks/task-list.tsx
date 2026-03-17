@@ -45,6 +45,7 @@ const statusLabel: Record<string, string> = {
   TODO: 'To Do',
   IN_PROGRESS: 'In Progress',
   REVIEW: 'Review',
+  DONE: 'Done',
 };
 
 function formatDate(date: Date | null) {
