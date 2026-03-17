@@ -1,14 +1,18 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Priority, TaskStatus } from '@prisma/client';
 import { useState, useTransition } from 'react';
-import { Card } from '@/components/ui/card';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
+import { createTask, updateTask, deleteTask } from '@/actions/tasks';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { taskSchema } from '@/lib/validations/task';
 import { cn } from '@/lib/utils';
-import { updateTask } from '@/actions/tasks';
-import { toast } from 'sonner';
-import { Pencil, X } from 'lucide-react';
 
 type Task = {
   id: string;
@@ -21,10 +25,13 @@ type Task = {
   assignee: { id: string; name: string | null } | null;
 };
 
-type SelectOption = { id: string; name: string | null };
+type Option = { id: string; name: string | null };
 
-const priorities = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const;
-const statuses = ['BACKLOG', 'TODO', 'IN_PROGRESS', 'REVIEW', 'DONE'] as const;
+type Props = {
+  tasks: Task[];
+  projects: Option[];
+  users: Option[];
+};
 
 const priorityColor: Record<string, string> = {
   URGENT: 'text-red-400',
@@ -56,167 +63,174 @@ function formatDate(date: Date | null) {
   return { text: formatted, overdue: false };
 }
 
-function EditForm({
-  task,
+const selectClass = 'h-10 w-full rounded-md border border-white/10 bg-black/30 px-3';
+
+type FormValues = z.infer<typeof taskSchema>;
+
+function TaskForm({
+  defaultValues,
   projects,
   users,
-  onClose,
+  onSubmit,
+  isPending,
+  submitLabel,
+  onCancel,
 }: {
-  task: Task;
-  projects: SelectOption[];
-  users: SelectOption[];
-  onClose: () => void;
+  defaultValues: FormValues;
+  projects: Option[];
+  users: Option[];
+  onSubmit: (values: FormValues) => void;
+  isPending: boolean;
+  submitLabel: string;
+  onCancel?: () => void;
 }) {
-  const [pending, startTransition] = useTransition();
-  const [title, setTitle] = useState(task.title);
-  const [description, setDescription] = useState(task.description ?? '');
-  const [status, setStatus] = useState(task.status);
-  const [priority, setPriority] = useState(task.priority);
-  const [projectId, setProjectId] = useState(task.project?.id ?? '');
-  const [assigneeId, setAssigneeId] = useState(task.assignee?.id ?? '');
-
-  function handleSave() {
-    startTransition(async () => {
-      try {
-        await updateTask(task.id, {
-          title,
-          description: description || undefined,
-          status: status as any,
-          priority: priority as any,
-          projectId: projectId || null,
-          assigneeId: assigneeId || null,
-        });
-        toast.success('Task updated');
-        onClose();
-      } catch {
-        toast.error('Failed to update task');
-      }
-    });
-  }
-
-  const selectClass =
-    'h-10 w-full rounded-md border border-border bg-black/20 px-3 text-sm text-white appearance-none';
+  const form = useForm<FormValues>({
+    resolver: zodResolver(taskSchema),
+    defaultValues,
+  });
 
   return (
-    <Card className="p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <span className="text-sm font-medium text-white/70">Edit Task</span>
-        <button onClick={onClose} className="text-white/50 hover:text-white">
-          <X size={16} />
-        </button>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+      <Input {...form.register('title')} placeholder="Task title" />
+      <Input {...form.register('description')} placeholder="Description (optional)" />
+      <div className="grid gap-2 sm:grid-cols-2">
+        <select {...form.register('status')} className={selectClass}>
+          {Object.values(TaskStatus).map((s) => (
+            <option key={s} value={s}>{statusLabel[s] ?? s}</option>
+          ))}
+        </select>
+        <select {...form.register('priority')} className={selectClass}>
+          {Object.values(Priority).map((p) => (
+            <option key={p} value={p}>{p.charAt(0) + p.slice(1).toLowerCase()}</option>
+          ))}
+        </select>
+        <select {...form.register('projectId')} className={selectClass}>
+          <option value="">No project</option>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
+        <select {...form.register('assigneeId')} className={selectClass}>
+          <option value="">Unassigned</option>
+          {users.map((u) => (
+            <option key={u.id} value={u.id}>{u.name ?? u.id}</option>
+          ))}
+        </select>
       </div>
-      <div className="grid gap-3">
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Title"
-        />
-        <Input
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description (optional)"
-        />
-        <div className="grid grid-cols-2 gap-3">
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className={selectClass}
-          >
-            {statuses.map((s) => (
-              <option key={s} value={s}>
-                {statusLabel[s]}
-              </option>
-            ))}
-          </select>
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-            className={selectClass}
-          >
-            {priorities.map((p) => (
-              <option key={p} value={p}>
-                {p.charAt(0) + p.slice(1).toLowerCase()}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <select
-            value={projectId}
-            onChange={(e) => setProjectId(e.target.value)}
-            className={selectClass}
-          >
-            <option value="">No project</option>
-            {projects.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-          <select
-            value={assigneeId}
-            onChange={(e) => setAssigneeId(e.target.value)}
-            className={selectClass}
-          >
-            <option value="">Unassigned</option>
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.name ?? 'Unknown'}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" size="sm" onClick={onClose} disabled={pending}>
-            Cancel
-          </Button>
-          <Button size="sm" onClick={handleSave} disabled={pending || title.trim().length < 2}>
-            {pending ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
+      <div className="flex gap-2">
+        <Button disabled={isPending} className="flex-1">{submitLabel}</Button>
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+        )}
       </div>
-    </Card>
+    </form>
   );
 }
 
-export function TaskList({
-  tasks,
-  projects,
-  users,
-}: {
-  tasks: Task[];
-  projects: SelectOption[];
-  users: SelectOption[];
-}) {
+export function TaskList({ tasks, projects, users }: Props) {
+  const [isPending, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
 
-  if (tasks.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 text-white/50">
-        <p className="text-lg">No active tasks</p>
-        <p className="text-sm">All tasks are completed or none have been created yet.</p>
-      </div>
-    );
-  }
+  const handleCreate = (values: FormValues) => {
+    startTransition(async () => {
+      await createTask({
+        ...values,
+        projectId: values.projectId || null,
+        assigneeId: values.assigneeId || null,
+      });
+      toast.success('Task created');
+      setShowCreate(false);
+    });
+  };
+
+  const handleUpdate = (taskId: string) => (values: FormValues) => {
+    startTransition(async () => {
+      await updateTask(taskId, {
+        ...values,
+        projectId: values.projectId || null,
+        assigneeId: values.assigneeId || null,
+      });
+      toast.success('Task updated');
+      setEditingId(null);
+    });
+  };
+
+  const handleDelete = (taskId: string, title: string) => {
+    if (!window.confirm(`Delete "${title}"?`)) return;
+    startTransition(async () => {
+      await deleteTask(taskId);
+      toast.success('Task deleted');
+    });
+  };
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-semibold">Tasks</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Tasks</h1>
+        <Button onClick={() => setShowCreate(!showCreate)}>
+          {showCreate ? 'Cancel' : 'New task'}
+        </Button>
+      </div>
+
+      {showCreate && (
+        <Card className="mb-4 p-4">
+          <h2 className="mb-3 font-medium">Create task</h2>
+          <TaskForm
+            defaultValues={{
+              title: '',
+              description: '',
+              priority: Priority.MEDIUM,
+              status: TaskStatus.TODO,
+              projectId: null,
+              assigneeId: null,
+            }}
+            projects={projects}
+            users={users}
+            onSubmit={handleCreate}
+            isPending={isPending}
+            submitLabel="Create task"
+            onCancel={() => setShowCreate(false)}
+          />
+        </Card>
+      )}
+
+      {tasks.length === 0 && !showCreate && (
+        <div className="flex flex-col items-center justify-center py-20 text-white/50">
+          <p className="text-lg">No active tasks</p>
+          <p className="text-sm">All tasks are completed or none have been created yet.</p>
+        </div>
+      )}
+
       <div className="grid gap-3">
         {tasks.map((task) => {
-          if (editingId === task.id) {
+          const due = formatDate(task.dueAt);
+          const isEditing = editingId === task.id;
+
+          if (isEditing) {
             return (
-              <EditForm
-                key={task.id}
-                task={task}
-                projects={projects}
-                users={users}
-                onClose={() => setEditingId(null)}
-              />
+              <Card key={task.id} className="p-4">
+                <h3 className="mb-3 font-medium">Edit task</h3>
+                <TaskForm
+                  defaultValues={{
+                    title: task.title,
+                    description: task.description ?? '',
+                    priority: task.priority as Priority,
+                    status: task.status as TaskStatus,
+                    projectId: task.project?.id ?? null,
+                    assigneeId: task.assignee?.id ?? null,
+                  }}
+                  projects={projects}
+                  users={users}
+                  onSubmit={handleUpdate(task.id)}
+                  isPending={isPending}
+                  submitLabel="Save"
+                  onCancel={() => setEditingId(null)}
+                />
+              </Card>
             );
           }
 
-          const due = formatDate(task.dueAt);
           return (
             <Card key={task.id} className="flex items-center gap-4 p-4">
               <div className="min-w-0 flex-1">
@@ -240,13 +254,14 @@ export function TaskList({
                   {due.text}
                 </span>
               )}
-              <button
-                onClick={() => setEditingId(task.id)}
-                className="shrink-0 rounded-md p-2 text-white/40 hover:bg-white/10 hover:text-white"
-                aria-label="Edit task"
-              >
-                <Pencil size={14} />
-              </button>
+              <div className="flex shrink-0 gap-1">
+                <Button variant="outline" className="h-8 text-xs" onClick={() => setEditingId(task.id)}>
+                  Edit
+                </Button>
+                <Button variant="outline" className="h-8 text-xs text-red-400" onClick={() => handleDelete(task.id, task.title)}>
+                  Delete
+                </Button>
+              </div>
             </Card>
           );
         })}

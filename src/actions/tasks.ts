@@ -78,6 +78,7 @@ export async function createTask(input: {
 
   revalidatePath('/app/queue');
   revalidatePath('/app/kanban');
+  revalidatePath('/app/tasks');
   if (parsed.projectId) revalidatePath(`/app/projects/${parsed.projectId}`);
 }
 
@@ -115,6 +116,18 @@ export async function updateTask(taskId: string, input: Omit<Parameters<typeof c
   revalidatePath('/app/tasks');
   if (prev.projectId) revalidatePath(`/app/projects/${prev.projectId}`);
   if (parsed.projectId) revalidatePath(`/app/projects/${parsed.projectId}`);
+}
+
+export async function deleteTask(taskId: string) {
+  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  if (!task) throw new Error('Task not found');
+
+  await prisma.task.delete({ where: { id: taskId } });
+
+  revalidatePath('/app/queue');
+  revalidatePath('/app/kanban');
+  revalidatePath('/app/tasks');
+  if (task.projectId) revalidatePath(`/app/projects/${task.projectId}`);
 }
 
 export async function reorderTask(input: { taskId: string; toStatus: TaskStatus; toOrder: number }) {

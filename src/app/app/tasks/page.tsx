@@ -26,10 +26,9 @@ export default async function TasksPage() {
     }),
     prisma.project.findMany({
       select: { id: true, name: true },
-      orderBy: { updatedAt: 'desc' },
+      orderBy: { name: 'asc' },
     }),
     prisma.user.findMany({
-      where: { name: { not: null } },
       select: { id: true, name: true },
       orderBy: { name: 'asc' },
     }),
