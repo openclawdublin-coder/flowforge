@@ -6,11 +6,11 @@ import { QueueBoard } from '@/components/queue/queue-board';
 export default async function QueuePage() {
   const [tasks, projects, users] = await Promise.all([
     prisma.task.findMany({
-      where: { projectId: null },
+      where: { projectId: null, deletedAt: null },
       orderBy: { order: 'asc' },
       select: { id: true, title: true, projectId: true, status: true, order: true },
     }),
-    prisma.project.findMany({ select: { id: true, name: true }, orderBy: { updatedAt: 'desc' } }),
+    prisma.project.findMany({ where: { deletedAt: null }, select: { id: true, name: true }, orderBy: { updatedAt: 'desc' } }),
     prisma.user.findMany({
       where: { name: { not: null } },
       select: { id: true, name: true },

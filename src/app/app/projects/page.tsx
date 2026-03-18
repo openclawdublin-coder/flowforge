@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 
 export default async function ProjectsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q } = await searchParams;
-  const projects = await prisma.project.findMany({ where: q ? { OR: [{ name: { contains: q, mode: 'insensitive' } }, { key: { contains: q, mode: 'insensitive' } }] } : {}, include: { _count: { select: { tasks: true, members: true } } }, orderBy: { updatedAt: 'desc' } });
+  const projects = await prisma.project.findMany({ where: { deletedAt: null, ...(q ? { OR: [{ name: { contains: q, mode: 'insensitive' } }, { key: { contains: q, mode: 'insensitive' } }] } : {}) }, include: { _count: { select: { tasks: { where: { deletedAt: null } }, members: true } } }, orderBy: { updatedAt: 'desc' } });
   return <div>
     <div className='mb-4 flex items-center justify-between'><h1 className='text-2xl font-semibold'>Projects</h1><Link className='rounded-md bg-primary px-4 py-2 text-sm text-white' href='/app/projects/new'>New project</Link></div>
     <form className='mb-4'><input name='q' placeholder='Search projects...' className='h-10 w-full rounded-md border border-white/10 bg-black/20 px-3' defaultValue={q}/></form>

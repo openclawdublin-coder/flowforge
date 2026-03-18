@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Home, Inbox, FolderKanban, Columns2, Menu, X, CheckSquare } from 'lucide-react';
+import { Home, Inbox, FolderKanban, Columns2, Menu, X, CheckSquare, Trash2 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
@@ -11,6 +11,7 @@ const items = [
   { href: '/app/projects', label: 'Projects', icon: FolderKanban },
   { href: '/app/tasks', label: 'Tasks', icon: CheckSquare },
   { href: '/app/kanban', label: 'Kanban', icon: Columns2 },
+  { href: '/app/recycle', label: 'Recycle ♻️', icon: Trash2 },
 ];
 
 function NavLinks({ onClick }: { onClick?: () => void }) {

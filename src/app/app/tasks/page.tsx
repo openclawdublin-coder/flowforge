@@ -8,6 +8,7 @@ export default async function TasksPage() {
     prisma.task.findMany({
       where: {
         status: { not: 'DONE' },
+        deletedAt: null,
       },
       orderBy: [
         { dueAt: { sort: 'asc', nulls: 'last' } },
@@ -25,6 +26,7 @@ export default async function TasksPage() {
       },
     }),
     prisma.project.findMany({
+      where: { deletedAt: null },
       select: { id: true, name: true },
       orderBy: { name: 'asc' },
     }),

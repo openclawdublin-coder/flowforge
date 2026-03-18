@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db';
 import { startOfDay, endOfDay, addDays } from 'date-fns';
 
 export default async function KanbanPage() {
-  const tasks = await prisma.task.findMany({ include: { project: true }, orderBy: { order: 'asc' } });
+  const tasks = await prisma.task.findMany({ where: { deletedAt: null }, include: { project: true }, orderBy: { order: 'asc' } });
   const today = new Date();
   const todayTasks = tasks.filter(t=>t.dueAt && t.dueAt >= startOfDay(today) && t.dueAt <= endOfDay(today));
   const upcoming = tasks.filter(t=>t.dueAt && t.dueAt > endOfDay(today) && t.dueAt <= addDays(today, 7));
