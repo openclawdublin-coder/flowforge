@@ -7,7 +7,7 @@ import { ProjectDetail } from '@/components/projects/project-detail';
 export default async function ProjectPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
   const project = await prisma.project.findUnique({
-    where: { id: projectId },
+    where: { id: projectId, deletedAt: null },
     include: {
       tasks: {
         include: {

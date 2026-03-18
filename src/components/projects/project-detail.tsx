@@ -6,7 +6,7 @@ import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { addTaskComment, createTask } from '@/actions/tasks';
-import { createKanbanColumn, updateProject } from '@/actions/projects';
+import { createKanbanColumn, updateProject, deleteProject } from '@/actions/projects';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -123,7 +123,25 @@ export function ProjectDetail({ project }: Props) {
           <select {...projectForm.register('priority')} className='h-10 rounded-md border border-white/10 bg-black/30 px-3'>
             {Object.values(Priority).map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
-          <Button disabled={isPending} className='md:col-span-2'>Save project</Button>
+          <div className='flex gap-2 md:col-span-2'>
+            <Button disabled={isPending} className='flex-1'>Save project</Button>
+            <Button
+              type='button'
+              variant='outline'
+              className='text-red-400'
+              disabled={isPending}
+              onClick={() => {
+                if (!window.confirm(`Delete project "${project.name}" and all its tasks? Items will be moved to the recycle bin.`)) return;
+                startTransition(async () => {
+                  await deleteProject(project.id);
+                  toast.success('Project moved to recycle bin');
+                  window.location.href = '/app/projects';
+                });
+              }}
+            >
+              Delete project
+            </Button>
+          </div>
         </form>
       </Card>
 

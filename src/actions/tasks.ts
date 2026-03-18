@@ -24,7 +24,7 @@ export async function quickAddTask(title: string) {
       title: parsed.title,
       status: TaskStatus.BACKLOG,
       priority: Priority.MEDIUM,
-      order: (await prisma.task.count({ where: { projectId: null } })) + 1,
+      order: (await prisma.task.count({ where: { projectId: null, deletedAt: null } })) + 1,
     },
   });
 
@@ -60,7 +60,7 @@ export async function createTask(input: {
       assigneeId: parsed.assigneeId || null,
       order:
         (await prisma.task.count({
-          where: { projectId: parsed.projectId || null, status: parsed.status },
+          where: { projectId: parsed.projectId || null, status: parsed.status, deletedAt: null },
         })) + 1,
     },
   });
@@ -122,11 +122,12 @@ export async function deleteTask(taskId: string) {
   const task = await prisma.task.findUnique({ where: { id: taskId } });
   if (!task) throw new Error('Task not found');
 
-  await prisma.task.delete({ where: { id: taskId } });
+  await prisma.task.update({ where: { id: taskId }, data: { deletedAt: new Date() } });
 
   revalidatePath('/app/queue');
   revalidatePath('/app/kanban');
   revalidatePath('/app/tasks');
+  revalidatePath('/app/recycle');
   if (task.projectId) revalidatePath(`/app/projects/${task.projectId}`);
 }
 

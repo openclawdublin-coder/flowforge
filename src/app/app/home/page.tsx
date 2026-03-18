@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 
 export default async function HomePage() {
   const [projects, tasks, done] = await Promise.all([
-    prisma.project.count(), prisma.task.count(), prisma.task.count({ where: { status: 'DONE' } }),
+    prisma.project.count({ where: { deletedAt: null } }), prisma.task.count({ where: { deletedAt: null } }), prisma.task.count({ where: { status: 'DONE', deletedAt: null } }),
   ]);
   return <div className='grid gap-4 md:grid-cols-3'>{[
     ['Projects', projects], ['Tasks', tasks], ['Completed', done],

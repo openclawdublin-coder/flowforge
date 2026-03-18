@@ -5,6 +5,24 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { columnSchema, projectSchema } from '@/lib/validations/project';
 
+export async function deleteProject(projectId: string) {
+  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  if (!project) throw new Error('Project not found');
+
+  const now = new Date();
+
+  await prisma.$transaction([
+    prisma.task.updateMany({ where: { projectId, deletedAt: null }, data: { deletedAt: now } }),
+    prisma.project.update({ where: { id: projectId }, data: { deletedAt: now } }),
+  ]);
+
+  revalidatePath('/app/projects');
+  revalidatePath('/app/tasks');
+  revalidatePath('/app/kanban');
+  revalidatePath('/app/queue');
+  revalidatePath('/app/recycle');
+}
+
 export async function createProject(input: {
   name: string;
   key: string;
