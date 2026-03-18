@@ -10,6 +10,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ projec
     where: { id: projectId, deletedAt: null },
     include: {
       tasks: {
+        where: { deletedAt: null },
         include: {
           comments: {
             include: { author: { select: { name: true, email: true } } },
