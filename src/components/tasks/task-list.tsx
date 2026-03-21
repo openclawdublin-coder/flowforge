@@ -118,6 +118,7 @@ function TaskForm({
           ))}
         </select>
       </div>
+      <Input type="date" {...form.register('dueAt')} className="w-full" placeholder="Due date (optional)" />
       <div className="flex gap-2">
         <Button disabled={isPending}>{submitLabel}</Button>
         {onCancel && (
@@ -140,6 +141,7 @@ export function TaskList({ tasks, projects, users }: Props) {
         ...values,
         projectId: values.projectId || null,
         assigneeId: values.assigneeId || null,
+        dueAt: values.dueAt ? new Date(values.dueAt) : null,
       });
       toast.success('Task created');
       setShowCreate(false);
@@ -152,6 +154,7 @@ export function TaskList({ tasks, projects, users }: Props) {
         ...values,
         projectId: values.projectId || null,
         assigneeId: values.assigneeId || null,
+        dueAt: values.dueAt ? new Date(values.dueAt) : null,
       });
       toast.success('Task updated');
       setEditingId(null);
@@ -185,6 +188,7 @@ export function TaskList({ tasks, projects, users }: Props) {
                 status: TaskStatus.TODO,
                 projectId: null,
                 assigneeId: null,
+                dueAt: null,
               }}
               projects={projects}
               users={users}
@@ -256,6 +260,7 @@ export function TaskList({ tasks, projects, users }: Props) {
                 status: editingTask.status as TaskStatus,
                 projectId: editingTask.project?.id ?? null,
                 assigneeId: editingTask.assignee?.id ?? null,
+                dueAt: editingTask.dueAt ? new Date(editingTask.dueAt).toISOString().split('T')[0] : null,
               }}
               projects={projects}
               users={users}

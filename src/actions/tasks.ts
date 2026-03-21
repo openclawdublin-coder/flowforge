@@ -47,6 +47,7 @@ export async function createTask(input: {
   status: TaskStatus;
   projectId?: string | null;
   assigneeId?: string | null;
+  dueAt?: Date | null;
 }) {
   const parsed = taskSchema.parse(input);
 
@@ -58,6 +59,7 @@ export async function createTask(input: {
       status: parsed.status,
       projectId: parsed.projectId || null,
       assigneeId: parsed.assigneeId || null,
+      dueAt: parsed.dueAt || null,
       order:
         (await prisma.task.count({
           where: { projectId: parsed.projectId || null, status: parsed.status, deletedAt: null },
@@ -97,6 +99,7 @@ export async function updateTask(taskId: string, input: Omit<Parameters<typeof c
       status: parsed.status,
       projectId: parsed.projectId || null,
       assigneeId: parsed.assigneeId || null,
+      dueAt: parsed.dueAt || null,
     },
   });
 

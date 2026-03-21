@@ -8,6 +8,7 @@ export const taskSchema = z.object({
   status: z.nativeEnum(TaskStatus),
   projectId: z.string().cuid().optional().nullable(),
   assigneeId: z.string().cuid().optional().nullable(),
+  dueAt: z.coerce.date().optional().nullable(),
 });
 
 export const queueQuickAddSchema = z.object({
