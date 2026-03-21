@@ -69,6 +69,7 @@ export function ProjectDetail({ project }: Props) {
       status: TaskStatus.TODO,
       projectId: project.id,
       assigneeId: null,
+      dueAt: null,
     },
   });
 
