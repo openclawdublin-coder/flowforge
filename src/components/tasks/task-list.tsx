@@ -141,7 +141,7 @@ export function TaskList({ tasks, projects, users }: Props) {
         ...values,
         projectId: values.projectId || null,
         assigneeId: values.assigneeId || null,
-        dueAt: values.dueAt ? new Date(values.dueAt) : null,
+        dueAt: values.dueAt || null,
       });
       toast.success('Task created');
       setShowCreate(false);
@@ -154,7 +154,7 @@ export function TaskList({ tasks, projects, users }: Props) {
         ...values,
         projectId: values.projectId || null,
         assigneeId: values.assigneeId || null,
-        dueAt: values.dueAt ? new Date(values.dueAt) : null,
+        dueAt: values.dueAt || null,
       });
       toast.success('Task updated');
       setEditingId(null);
