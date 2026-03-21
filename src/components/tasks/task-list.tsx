@@ -185,10 +185,10 @@ export function TaskList({ tasks, projects, users }: Props) {
                 title: '',
                 description: '',
                 priority: Priority.MEDIUM,
-                status: TaskStatus.TODO,
-                projectId: null,
+                status: TaskStatus.BACKLOG,
+                projectId: projects.find((p) => p.name?.toLowerCase() === 'other')?.id ?? null,
                 assigneeId: null,
-                dueAt: null,
+                dueAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
               }}
               projects={projects}
               users={users}
